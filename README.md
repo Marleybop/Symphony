@@ -53,12 +53,13 @@ sudo apt update && sudo apt upgrade -y
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 
 # Install all dependencies in one command
-sudo apt install -y nodejs ffmpeg build-essential python3 git
+sudo apt install -y nodejs npm ffmpeg build-essential python3 git
 ```
 
 **2. Verify installations:**
 ```bash
-node --version  # Should show v22.x.x
+node --version   # Should show v22.x.x
+npm --version    # Should show npm version
 ffmpeg -version  # Should show ffmpeg version
 ```
 
@@ -138,7 +139,7 @@ If you want to run Symphony manually without systemd:
 # Install system dependencies
 sudo apt update && sudo apt upgrade -y
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs ffmpeg build-essential python3 git
+sudo apt install -y nodejs npm ffmpeg build-essential python3 git
 
 # Clone and setup
 git clone https://github.com/Marleybop/Symphony.git
@@ -225,7 +226,7 @@ docker logs -f symphony
 ```bash
 # Install prerequisites (Ubuntu/Debian)
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs ffmpeg git
+sudo apt install -y nodejs npm ffmpeg git
 
 # Clone, configure, and run
 git clone https://github.com/Marleybop/Symphony.git && cd Symphony
