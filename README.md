@@ -1,149 +1,401 @@
-<p align="center">
-  <img width="250" height="250" src="">
-</p>
+# Symphony 🎵
 
-> [!WARNING]
-> I ([@codetheweb](https://github.com/codetheweb)) am no longer the primary maintainer of Muse. **If you use the Docker image, update your image source to `ghcr.io/museofficial/muse`.** We are currently publishing new releases to both `ghcr.io/museofficial/muse` and `codetheweb/muse`, but this may change in the future.
-> Thank you to all the people who stepped up to help maintain Muse!
-
-------
-
-Muse is a **highly-opinionated midwestern self-hosted** Discord music bot **that doesn't suck**. It's made for small to medium-sized Discord servers/guilds (think about a group the size of you, your friends, and your friend's friends).
-
-![Hero graphic](.github/hero.png)
+Symphony is a **self-hosted Discord music bot** that doesn't suck. It's designed for small to medium-sized Discord servers with powerful features and great performance.
 
 ## Features
 
-- 🎥 Livestreams
-- ⏩ Seeking within a song/video
-- 💾 Local caching for better performance
-- 📋 No vote-to-skip - this is anarchy, not a democracy
-- ↔️ Autoconverts playlists / artists / albums / songs from Spotify
-- ↗️ Users can add custom shortcuts (aliases)
-- 1️⃣ Muse instance supports multiple guilds
-- 🔊 Normalizes volume across tracks
-- ✍️ Written in TypeScript, easily extendable
-- ❤️ Loyal Packers fan
+- 🎥 **Livestreams** - Play live YouTube streams
+- 🎭 **Mood-based playback** - `/mood` command with 20 curated moods (chill, energetic, focus, etc.)
+- 🎲 **Random mode** - `/random` command picks a random mood for you
+- ⏩ **Seeking** - Jump to any point in a song/video
+- 💾 **Local caching** - Better performance with smart caching
+- 📋 **No vote-to-skip** - Skip songs instantly
+- ↔️ **Spotify integration** - Autoconverts playlists/artists/albums/songs from Spotify to YouTube
+- ↗️ **Custom shortcuts** - Save favorite queries with `/favorites`
+- 1️⃣ **Multi-guild support** - One bot instance supports multiple servers
+- 🔊 **Volume normalization** - Consistent volume across tracks
+- 🎯 **Auto-ducking** - Reduce volume when people speak (optional)
+- ✍️ **TypeScript** - Modern, maintainable, and easily extendable
 
-## Running
+## Quick Start
 
-Muse is written in TypeScript. You can either run Muse with Docker (recommended) or directly with Node.js. Both methods require API keys passed in as environment variables:
+Symphony requires the following API keys (passed as environment variables):
 
-- `DISCORD_TOKEN` can be acquired [here](https://discordapp.com/developers/applications) by creating a 'New Application', then going to 'Bot'.
-- `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` can be acquired [here](https://developer.spotify.com/dashboard/applications) with 'Create a Client ID' (Optional).
-- `YOUTUBE_API_KEY` can be acquired by [creating a new project](https://console.developers.google.com) in Google's Developer Console, enabling the YouTube API, and creating an API key under credentials.
+- **`DISCORD_TOKEN`** (Required) - Get it [here](https://discordapp.com/developers/applications) by creating a 'New Application', then going to 'Bot'
+- **`YOUTUBE_API_KEY`** (Required) - Create a project in [Google's Developer Console](https://console.developers.google.com), enable YouTube Data API v3, and create an API key
+- **`SPOTIFY_CLIENT_ID`** and **`SPOTIFY_CLIENT_SECRET`** (Optional) - Get them [here](https://developer.spotify.com/dashboard/applications) by creating a new app
 
-Muse will log a URL when run. Open this URL in a browser to invite Muse to your server. Muse will DM the server owner after it's added with setup instructions.
+**Important**: A 64-bit OS is required to run Symphony.
 
-A 64-bit OS is required to run Muse.
+After starting Symphony, it will log an invite URL. Open this URL in your browser to add Symphony to your Discord server.
 
-### Versioning
+## Installation Methods
 
-The `master` branch acts as the developing / bleeding edge branch and is not guaranteed to be stable.
+### 🐧 LXC Container (Recommended for Linux servers)
 
-When running a production instance, I recommend that you use the [latest release](https://github.com/museofficial/muse/releases/).
+This method is ideal for running Symphony in a lightweight Linux container on Proxmox or other LXC-compatible systems.
 
+#### Prerequisites
+- LXC container with Ubuntu 22.04 or Debian 12
+- At least 1GB RAM and 10GB storage
+- Internet connectivity
+
+#### Installation Steps
+
+1. **Update system packages**
+   ```bash
+   sudo apt update && sudo apt upgrade -y
+   ```
+
+2. **Install Node.js 22.x**
+   ```bash
+   # Install Node.js from NodeSource
+   curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+   sudo apt install -y nodejs
+
+   # Verify installation
+   node --version  # Should show v22.x.x
+   npm --version
+   ```
+
+3. **Install ffmpeg**
+   ```bash
+   sudo apt install -y ffmpeg
+
+   # Verify installation
+   ffmpeg -version
+   ```
+
+4. **Install build essentials** (required for native dependencies)
+   ```bash
+   sudo apt install -y build-essential python3 git
+   ```
+
+5. **Create a dedicated user for Symphony** (optional but recommended)
+   ```bash
+   sudo adduser --system --group --home /opt/symphony symphony
+   sudo su - symphony
+   ```
+
+6. **Clone Symphony repository**
+   ```bash
+   cd /opt/symphony
+   git clone https://github.com/Marleybop/Symphony.git
+   cd Symphony
+   ```
+
+7. **Install dependencies**
+   ```bash
+   npm install --legacy-peer-deps
+   ```
+
+8. **Configure environment variables**
+   ```bash
+   cp .env.example .env
+   nano .env
+   ```
+
+   Update the following variables:
+   ```
+   DISCORD_TOKEN=your_discord_bot_token
+   YOUTUBE_API_KEY=your_youtube_api_key
+   SPOTIFY_CLIENT_ID=your_spotify_client_id  # Optional
+   SPOTIFY_CLIENT_SECRET=your_spotify_secret  # Optional
+   DATA_DIR=/opt/symphony/Symphony/data
+   ```
+
+9. **Create systemd service** (for auto-start)
+
+   Exit the symphony user if you switched to it:
+   ```bash
+   exit  # Return to your admin user
+   ```
+
+   Create service file:
+   ```bash
+   sudo nano /etc/systemd/system/symphony.service
+   ```
+
+   Add the following content:
+   ```ini
+   [Unit]
+   Description=Symphony Discord Music Bot
+   After=network.target
+
+   [Service]
+   Type=simple
+   User=symphony
+   WorkingDirectory=/opt/symphony/Symphony
+   ExecStart=/usr/bin/npm start
+   Restart=always
+   RestartSec=10
+   StandardOutput=journal
+   StandardError=journal
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+10. **Enable and start Symphony**
+    ```bash
+    sudo systemctl daemon-reload
+    sudo systemctl enable symphony
+    sudo systemctl start symphony
+
+    # Check status
+    sudo systemctl status symphony
+
+    # View logs
+    sudo journalctl -u symphony -f
+    ```
+
+#### LXC Container Tips
+
+- **Resource allocation**: Allocate at least 1GB RAM for smooth operation
+- **Storage**: 10GB+ recommended for caching music
+- **Networking**: Ensure the container has internet access
+- **Firewall**: No incoming ports needed (Discord bot uses outbound connections)
+- **Backups**: Back up `/opt/symphony/Symphony/data` directory for database and cache
+
+#### Updating Symphony in LXC
+
+```bash
+sudo systemctl stop symphony
+cd /opt/symphony/Symphony
+git pull
+npm install --legacy-peer-deps
+sudo systemctl start symphony
+```
 
 ### 🐳 Docker
 
-There are a variety of image tags available:
-- `:2`: versions >= 2.0.0
-- `:2.1`: versions >= 2.1.0 and < 2.2.0
-- `:2.1.1`: an exact version specifier
-- `:latest`: whatever the latest version is
+Symphony can run in Docker containers. You can use the following methods:
 
-(Replace empty config strings with correct values.)
-
+**Single Container**:
 ```bash
-docker run -it -v "$(pwd)/data":/data -e DISCORD_TOKEN='' -e SPOTIFY_CLIENT_ID='' -e SPOTIFY_CLIENT_SECRET='' -e YOUTUBE_API_KEY='' ghcr.io/museofficial/muse:latest
+docker run -it \
+  -v "$(pwd)/data":/data \
+  -e DISCORD_TOKEN='your_token' \
+  -e YOUTUBE_API_KEY='your_key' \
+  -e SPOTIFY_CLIENT_ID='your_id' \
+  -e SPOTIFY_CLIENT_SECRET='your_secret' \
+  ghcr.io/marleybop/symphony:latest
 ```
 
-This starts Muse and creates a data directory in your current directory.
+**Docker Compose** (recommended):
 
-You can also store your tokens in an environment file and make it available to your container. By default, the container will look for a `/config` environment file. You can customize this path with the `ENV_FILE` environment variable to use with, for example, [docker secrets](https://docs.docker.com/engine/swarm/secrets/). 
-
-**Docker Compose**:
-
+Create `docker-compose.yml`:
 ```yaml
 services:
-  muse:
-    image: ghcr.io/museofficial/muse:latest
+  symphony:
+    image: ghcr.io/marleybop/symphony:latest
     restart: always
     volumes:
-      - ./muse:/data
+      - ./symphony-data:/data
     environment:
-      - DISCORD_TOKEN=
-      - YOUTUBE_API_KEY=
-      - SPOTIFY_CLIENT_ID=
-      - SPOTIFY_CLIENT_SECRET=
+      - DISCORD_TOKEN=your_discord_token
+      - YOUTUBE_API_KEY=your_youtube_key
+      - SPOTIFY_CLIENT_ID=your_spotify_id     # Optional
+      - SPOTIFY_CLIENT_SECRET=your_spotify_secret  # Optional
 ```
 
-### Node.js
+Then run:
+```bash
+docker-compose up -d
+```
+
+### 💻 Node.js (Direct Installation)
 
 **Prerequisites**:
-* Node.js (18.17.0 or latest 18.xx.xx is required and latest 18.x.x LTS is recommended) (Version 18 due to opus dependency)
-* ffmpeg (4.1 or later)
+- Node.js 22.x (22.0.0 or later recommended)
+- ffmpeg (4.1 or later)
+- Git
 
-1. `git clone https://github.com/museofficial/muse.git && cd muse`
-2. Copy `.env.example` to `.env` and populate with values
-3. I recommend checking out a tagged release with `git checkout v[latest release]`
-4. `yarn install` (or `npm i`)
-5. `yarn start` (or `npm run start`)
+**Installation**:
 
-**Note**: if you're on Windows, you may need to manually set the ffmpeg path. See [#345](https://github.com/museofficial/muse/issues/345) for details.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Marleybop/Symphony.git
+   cd Symphony
+   ```
 
-## ⚙️ Additional configuration (advanced)
+2. Configure environment:
+   ```bash
+   cp .env.example .env
+   nano .env  # Edit with your API keys
+   ```
 
-### Cache
+3. Install dependencies:
+   ```bash
+   npm install --legacy-peer-deps
+   ```
 
-By default, Muse limits the total cache size to around 2 GB. If you want to change this, set the environment variable `CACHE_LIMIT`. For example, `CACHE_LIMIT=512MB` or `CACHE_LIMIT=10GB`.
+4. Start Symphony:
+   ```bash
+   npm start
+   ```
 
-### SponsorBlock
+**Note**: On Windows, you may need to manually set the ffmpeg path in your environment variables.
 
-Muse can skip non-music segments at the beginning or end of a Youtube music video (Using [SponsorBlock](https://sponsor.ajay.app/)). It is disabled by default. If you want to enable it, set the environment variable `ENABLE_SPONSORBLOCK=true` or uncomment it in your .env.
-Being a community project, the server may be down or overloaded. When it happen, Muse will skip requests to SponsorBlock for a few minutes. You can change the skip duration by setting the value of `SPONSORBLOCK_TIMEOUT`.
+## Commands
+
+### Playback
+- `/play <query>` - Play a song or playlist (YouTube URL, Spotify URL, or search)
+- `/pause` - Pause playback
+- `/resume` - Resume playback
+- `/skip` - Skip current song
+- `/stop` - Stop playback and clear queue
+- `/seek <position>` - Jump to a specific time (e.g., `1:30`)
+- `/fseek <duration>` - Forward seek by duration (e.g., `30s`)
+
+### Mood & Random
+- `/mood <mood>` - Play music based on a mood (20 moods available with autocomplete)
+- `/random` - Play music from a randomly selected mood
+
+Available moods: chill, energetic, focus, sad, happy, party, workout, sleep, morning, night, jazz, classical, electronic, rock, indie, ambient, romantic, melancholic, motivation, rain
+
+### Queue Management
+- `/queue` - Show current queue
+- `/shuffle` - Shuffle the queue
+- `/clear` - Clear the queue
+- `/move <from> <to>` - Reorder queue items
+- `/remove <position>` - Remove a song from queue
+- `/loop` - Toggle loop for current song
+- `/loop-queue` - Toggle loop for entire queue
+
+### Favorites
+- `/favorites create <name> <query>` - Save a query as a favorite
+- `/favorites use <name>` - Play a saved favorite
+- `/favorites list` - Show all favorites
+- `/favorites remove <name>` - Delete a favorite
+
+### Other
+- `/now-playing` - Show currently playing song
+- `/volume <0-100>` - Set volume
+- `/disconnect` - Disconnect bot from voice channel
+- `/config` - Configure server settings
+
+## Advanced Configuration
+
+### Cache Size
+
+By default, Symphony limits cache to 2GB. To change:
+```bash
+CACHE_LIMIT=512MB  # or 10GB, etc.
+```
+
+### SponsorBlock Integration
+
+Skip non-music segments in YouTube videos (disabled by default):
+```bash
+ENABLE_SPONSORBLOCK=true
+SPONSORBLOCK_TIMEOUT=5  # Minutes to wait after server errors
+```
 
 ### Custom Bot Status
 
-In the default state, Muse has the status "Online" and the text "Listening to Music". You can change the status through environment variables:
+Customize Symphony's Discord presence:
 
-- `BOT_STATUS`:
-  - `online` (Online)
-  - `idle` (Away)
-  - `dnd` (Do not Disturb)
+```bash
+BOT_STATUS=online          # online, idle, or dnd
+BOT_ACTIVITY_TYPE=LISTENING  # PLAYING, LISTENING, WATCHING, STREAMING
+BOT_ACTIVITY=music         # Activity text
+BOT_ACTIVITY_URL=          # Required for STREAMING type
+```
 
-- `BOT_ACTIVITY_TYPE`:
-  - `PLAYING` (Playing XYZ)
-  - `LISTENING` (Listening to XYZ)
-  - `WATCHING` (Watching XYZ)
-  - `STREAMING` (Streaming XYZ)
+**Examples**:
 
-- `BOT_ACTIVITY`: the text that follows the activity type
+Playing a game:
+```bash
+BOT_STATUS=online
+BOT_ACTIVITY_TYPE=PLAYING
+BOT_ACTIVITY=with music
+```
 
-- `BOT_ACTIVITY_URL` If you use `STREAMING` you MUST set this variable, otherwise it will not work! Here you write a regular YouTube or Twitch Stream URL.
+Streaming:
+```bash
+BOT_STATUS=online
+BOT_ACTIVITY_TYPE=STREAMING
+BOT_ACTIVITY_URL=https://www.twitch.tv/monstercat
+BOT_ACTIVITY=Monstercat
+```
 
-#### Examples
+### Auto Volume Reduction
 
-**Muse is watching a movie and is DND**:
-- `BOT_STATUS=dnd`
-- `BOT_ACTIVITY_TYPE=WATCHING`
-- `BOT_ACTIVITY=a movie`
+Automatically reduce volume when people speak:
 
-**Muse is streaming Monstercat**:
-- `BOT_STATUS=online`
-- `BOT_ACTIVITY_TYPE=STREAMING`
-- `BOT_ACTIVITY_URL=https://www.twitch.tv/monstercat`
-- `BOT_ACTIVITY=Monstercat`
+- `/config set-reduce-vol-when-voice true` - Enable
+- `/config set-reduce-vol-when-voice false` - Disable
+- `/config set-reduce-vol-when-voice-target <volume>` - Set target volume (0-100, default: 20)
 
-### Bot-wide commands
+### Global Command Registration
 
-If you have Muse running in a lot of guilds (10+) you may want to switch to registering commands bot-wide rather than for each guild. (The downside to this is that command updates can take up to an hour to propagate.) To do this, set the environment variable `REGISTER_COMMANDS_ON_BOT` to `true`.
+For bots in 10+ servers, you can register commands globally (updates take up to 1 hour):
+```bash
+REGISTER_COMMANDS_ON_BOT=true
+```
 
-### Automatically turn down volume when people speak
+### Server-Specific Settings
 
-You can configure the bot to automatically turn down the volume when people are speaking in the channel using the following commands:
+Each server can customize:
+- Playlist limit (max songs from playlists)
+- Auto-disconnect delay
+- Auto-announce next song
+- Default volume
+- Queue page size
+- And more via `/config` commands
 
-- `/config set-reduce-vol-when-voice true` - Enable automatic volume reduction
-- `/config set-reduce-vol-when-voice false` - Disable automatic volume reduction
-- `/config set-reduce-vol-when-voice-target <volume>` - Set the target volume percentage when people speak (0-100, default is 70)
+## Troubleshooting
 
+**Bot doesn't join voice channel**:
+- Ensure the bot has "Connect" and "Speak" permissions
+- Check that you're in a voice channel when using commands
+
+**Music sounds distorted**:
+- Try adjusting volume with `/volume`
+- Check your cache size (`CACHE_LIMIT`)
+
+**Commands not showing up**:
+- Wait a few minutes for Discord to sync commands
+- Try kicking and re-inviting the bot
+- Set `REGISTER_COMMANDS_ON_BOT=true` for global registration
+
+**"No songs found" error**:
+- Verify your YouTube API key is valid and has quota remaining
+- Check your internet connection
+- Try a different search query
+
+## Development
+
+**Build TypeScript**:
+```bash
+npm run build
+```
+
+**Type checking**:
+```bash
+npm run typecheck
+```
+
+**Linting**:
+```bash
+npm run lint
+npm run lint:fix
+```
+
+**Development mode** (auto-reload):
+```bash
+npm run dev
+```
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## Credits
+
+Symphony is a fork of [Muse](https://github.com/museofficial/muse), originally created by [@codetheweb](https://github.com/codetheweb) and maintained by the Muse community. Special thanks to all contributors who built the foundation this project is based on.
+
+---
+
+Made with ❤️ for music lovers everywhere

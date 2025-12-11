@@ -27,7 +27,7 @@ export default class AddQueryToQueue {
     @inject(TYPES.KeyValueCache) cache: KeyValueCacheProvider) {
     this.sponsorBlockTimeoutDelay = config.SPONSORBLOCK_TIMEOUT;
     this.sponsorBlock = config.ENABLE_SPONSORBLOCK
-      ? new SponsorBlock('muse-sb-integration') // UserID matters only for submissions
+      ? new SponsorBlock('symphony-sb-integration') // UserID matters only for submissions
       : undefined;
     this.cache = cache;
   }

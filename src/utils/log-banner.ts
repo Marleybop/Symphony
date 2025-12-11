@@ -3,12 +3,10 @@ import {readPackageSync} from 'read-pkg';
 
 const logBanner = () => {
   console.log(makeLines({
-    user: 'codetheweb',
-    repository: 'muse',
+    user: 'Marleybop',
+    repository: 'Symphony',
     version: readPackageSync().version,
-    paypalUser: 'codetheweb',
-    githubSponsor: 'codetheweb',
-    madeByPrefix: 'Made with 🎶 by ',
+    madeByPrefix: 'Made with 🎵 by ',
     buildDate: process.env.BUILD_DATE ? new Date(process.env.BUILD_DATE) : undefined,
     commit: process.env.COMMIT_HASH ?? 'unknown',
   }).join('\n'));

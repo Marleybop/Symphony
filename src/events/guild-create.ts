@@ -40,5 +40,5 @@ export default async (guild: Guild): Promise<void> => {
   }
 
   const owner = await guild.fetchOwner();
-  await owner.send('👋 Hi! Someone (probably you) just invited me to a server you own. By default, I\'m usable by all guild member in all guild channels. To change this, check out the wiki page on permissions: https://github.com/museofficial/muse/wiki/Configuring-Bot-Permissions.');
+  await owner.send('👋 Hi! Someone (probably you) just invited me to a server you own. I\'m Symphony, a music bot with mood-based playback! By default, I\'m usable by all guild members in all channels. Use `/mood` to play music by mood, or `/help` to see all commands. Check out https://github.com/Marleybop/Symphony for more info!');
 };

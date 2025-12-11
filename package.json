@@ -1,9 +1,9 @@
 {
-  "name": "muse",
+  "name": "symphony",
   "version": "2.11.1",
-  "description": "🎧 a self-hosted Discord music bot that doesn't suck ",
-  "repository": "git@github.com:museofficial/muse.git",
-  "author": "Max Isom <hi@maxisom.me>",
+  "description": "🎵 Symphony - A self-hosted Discord music bot with mood-based playback",
+  "repository": "git@github.com:Marleybop/Symphony.git",
+  "author": "Marleybop",
   "license": "MIT",
   "private": true,
   "types": "dts/types",
