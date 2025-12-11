@@ -515,49 +515,37 @@ export default class {
       // For YouTube, song.url is just the video ID, so we need to construct the full URL
       const youtubeUrl = `https://www.youtube.com/watch?v=${song.url}`;
 
-      console.error('[DEBUG] Getting video info for:', youtubeUrl);
-      const videoInfo = await play.video_info(youtubeUrl);
+      console.error('[DEBUG] Getting stream from play-dl for:', youtubeUrl);
 
-      console.error('[DEBUG] Video info received, formats:', videoInfo?.format?.length);
+      // Use play.stream() which handles authentication and returns a working stream
+      const streamData = await play.stream(youtubeUrl, {
+        quality: 2, // High quality
+      });
 
-      if (!videoInfo || !videoInfo.format || videoInfo.format.length === 0) {
-        throw new Error('Can\'t get video info from play-dl.');
+      console.error('[DEBUG] Stream received, type:', streamData.type);
+
+      if (!streamData || !streamData.stream) {
+        throw new Error('Can\'t get stream from play-dl.');
       }
 
-      // Get the best audio format that has a direct URL
-      // DASH adaptive formats have initRange/indexRange but no direct URL
-      // We need formats with a 'url' property that we can pass to ffmpeg
-      const formatsWithUrl = videoInfo.format.filter(f => f.url);
+      // Use the stream URL from play-dl's authenticated stream
+      // play-dl handles the authentication internally
+      const streamUrl = (streamData as any).url;
 
-      console.error('[DEBUG] Formats with URL:', formatsWithUrl.length);
-
-      // Prefer audio-only with URL, then formats with audio and URL, then first with URL
-      const audioOnlyFormat = formatsWithUrl.find(f => f.mimeType?.startsWith('audio/'));
-      const formatWithAudio = formatsWithUrl.find(f => f.audioQuality);
-      const format = audioOnlyFormat ?? formatWithAudio ?? formatsWithUrl[0];
-
-      console.error('[DEBUG] Selected format:', format?.itag, format?.mimeType, format?.audioQuality);
-
-      if (!format) {
-        throw new Error('Can\'t find suitable format.');
+      if (!streamUrl) {
+        throw new Error('play-dl stream has no URL');
       }
 
-      debug('Selected format:', format.itag, format.mimeType, format.audioQuality);
+      console.error('[DEBUG] Stream URL length:', streamUrl.length);
 
-      if (!format.url) {
-        console.error('[DEBUG] ERROR: Format has no URL!', format);
-        debug('Format object:', format);
-        throw new Error(`Format ${format.itag} has no URL property`);
-      }
+      ffmpegInput = streamUrl;
 
-      console.error('[DEBUG] Format URL length:', format.url.length);
-      debug('Using play-dl format', format.mimeType, 'URL length:', format.url.length);
-
-      ffmpegInput = format.url;
+      // Get video info for caching decision
+      const videoInfo = await play.video_basic_info(youtubeUrl);
 
       // Don't cache livestreams or long videos
       const MAX_CACHE_LENGTH_SECONDS = 30 * 60; // 30 minutes
-      const isLive = videoInfo.LiveStreamData?.isLive ?? false;
+      const isLive = videoInfo.video_details.live;
       const lengthSeconds = videoInfo.video_details.durationInSec;
 
       shouldCacheVideo = !isLive && lengthSeconds < MAX_CACHE_LENGTH_SECONDS && !options.seek;
