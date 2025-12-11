@@ -692,12 +692,17 @@ export default class {
         .outputFormat('webm')
         .addOutputOption(['-filter:a', `volume=${options?.volumeAdjustment ?? '1'}`])
         .on('error', error => {
+          console.error('[DEBUG] ffmpeg error:', error.message);
           if (!hasReturnedStreamClosed) {
             reject(error);
           }
         })
         .on('start', command => {
+          console.error('[DEBUG] ffmpeg started:', command.substring(0, 200));
           debug(`Spawned ffmpeg with ${command}`);
+        })
+        .on('end', () => {
+          console.error('[DEBUG] ffmpeg ended');
         });
 
       stream.pipe(capacitor);
