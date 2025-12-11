@@ -524,11 +524,17 @@ export default class {
         throw new Error('Can\'t get video info from play-dl.');
       }
 
-      // Get the best audio format
-      // Prefer audio-only formats, otherwise use formats with audio
-      const audioOnlyFormat = videoInfo.format.find(f => f.mimeType?.startsWith('audio/'));
-      const formatWithAudio = videoInfo.format.find(f => f.audioQuality);
-      const format = audioOnlyFormat ?? formatWithAudio ?? videoInfo.format[0];
+      // Get the best audio format that has a direct URL
+      // DASH adaptive formats have initRange/indexRange but no direct URL
+      // We need formats with a 'url' property that we can pass to ffmpeg
+      const formatsWithUrl = videoInfo.format.filter(f => f.url);
+
+      console.error('[DEBUG] Formats with URL:', formatsWithUrl.length);
+
+      // Prefer audio-only with URL, then formats with audio and URL, then first with URL
+      const audioOnlyFormat = formatsWithUrl.find(f => f.mimeType?.startsWith('audio/'));
+      const formatWithAudio = formatsWithUrl.find(f => f.audioQuality);
+      const format = audioOnlyFormat ?? formatWithAudio ?? formatsWithUrl[0];
 
       console.error('[DEBUG] Selected format:', format?.itag, format?.mimeType, format?.audioQuality);
 
