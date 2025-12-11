@@ -533,7 +533,12 @@ export default class {
 
       debug('Selected format:', format.itag, format.mimeType, format.audioQuality);
 
-      debug('Using play-dl format', format.mimeType);
+      if (!format.url) {
+        debug('Format object:', format);
+        throw new Error(`Format ${format.itag} has no URL property`);
+      }
+
+      debug('Using play-dl format', format.mimeType, 'URL length:', format.url.length);
 
       ffmpegInput = format.url;
 
@@ -648,6 +653,13 @@ export default class {
 
   private async createReadStream(options: {url: string; cacheKey: string; ffmpegInputOptions?: string[]; cache?: boolean; volumeAdjustment?: string}): Promise<Readable> {
     return new Promise((resolve, reject) => {
+      debug('createReadStream called with URL:', options.url ? `${options.url.substring(0, 100)}...` : 'UNDEFINED');
+
+      if (!options.url) {
+        reject(new Error('No input URL provided to createReadStream'));
+        return;
+      }
+
       const capacitor = new WriteStream();
 
       if (options?.cache) {
