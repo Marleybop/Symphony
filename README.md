@@ -40,114 +40,118 @@ This method is ideal for running Symphony in a lightweight Linux container on Pr
 - At least 1GB RAM and 10GB storage
 - Internet connectivity
 
-#### Installation Steps
+#### Quick Installation (Copy & Paste)
 
-1. **Update system packages**
-   ```bash
-   sudo apt update && sudo apt upgrade -y
-   ```
+Run these commands in order:
 
-2. **Install Node.js 22.x**
-   ```bash
-   # Install Node.js from NodeSource
-   curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-   sudo apt install -y nodejs
+**1. Update system and install all required packages:**
+```bash
+# Update system
+sudo apt update && sudo apt upgrade -y
 
-   # Verify installation
-   node --version  # Should show v22.x.x
-   npm --version
-   ```
+# Install Node.js 22.x repository
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 
-3. **Install ffmpeg**
-   ```bash
-   sudo apt install -y ffmpeg
+# Install all dependencies in one command
+sudo apt install -y nodejs ffmpeg build-essential python3 git
+```
 
-   # Verify installation
-   ffmpeg -version
-   ```
+**2. Verify installations:**
+```bash
+node --version  # Should show v22.x.x
+ffmpeg -version  # Should show ffmpeg version
+```
 
-4. **Install build essentials** (required for native dependencies)
-   ```bash
-   sudo apt install -y build-essential python3 git
-   ```
+**3. Setup Symphony with dedicated user (recommended):**
+```bash
+# Create symphony user and directory
+sudo adduser --system --group --home /opt/symphony symphony
 
-5. **Create a dedicated user for Symphony** (optional but recommended)
-   ```bash
-   sudo adduser --system --group --home /opt/symphony symphony
-   sudo su - symphony
-   ```
+# Clone repository
+sudo -u symphony git clone https://github.com/Marleybop/Symphony.git /opt/symphony/Symphony
 
-6. **Clone Symphony repository**
-   ```bash
-   cd /opt/symphony
-   git clone https://github.com/Marleybop/Symphony.git
-   cd Symphony
-   ```
+# Install Node dependencies
+cd /opt/symphony/Symphony
+sudo -u symphony npm install --legacy-peer-deps
+```
 
-7. **Install dependencies**
-   ```bash
-   npm install --legacy-peer-deps
-   ```
+**4. Configure Symphony:**
+```bash
+# Copy environment template
+sudo -u symphony cp .env.example .env
 
-8. **Configure environment variables**
-   ```bash
-   cp .env.example .env
-   nano .env
-   ```
+# Edit configuration (add your API keys)
+sudo nano .env
+```
 
-   Update the following variables:
-   ```
-   DISCORD_TOKEN=your_discord_bot_token
-   YOUTUBE_API_KEY=your_youtube_api_key
-   SPOTIFY_CLIENT_ID=your_spotify_client_id  # Optional
-   SPOTIFY_CLIENT_SECRET=your_spotify_secret  # Optional
-   DATA_DIR=/opt/symphony/Symphony/data
-   ```
+Edit these required fields:
+```env
+DISCORD_TOKEN=your_discord_bot_token_here
+YOUTUBE_API_KEY=your_youtube_api_key_here
+# Optional Spotify integration:
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_secret
+```
 
-9. **Create systemd service** (for auto-start)
+**5. Create systemd service for auto-start:**
+```bash
+# Create service file
+sudo tee /etc/systemd/system/symphony.service > /dev/null <<EOF
+[Unit]
+Description=Symphony Discord Music Bot
+After=network.target
 
-   Exit the symphony user if you switched to it:
-   ```bash
-   exit  # Return to your admin user
-   ```
+[Service]
+Type=simple
+User=symphony
+WorkingDirectory=/opt/symphony/Symphony
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
 
-   Create service file:
-   ```bash
-   sudo nano /etc/systemd/system/symphony.service
-   ```
+[Install]
+WantedBy=multi-user.target
+EOF
 
-   Add the following content:
-   ```ini
-   [Unit]
-   Description=Symphony Discord Music Bot
-   After=network.target
+# Enable and start service
+sudo systemctl daemon-reload
+sudo systemctl enable symphony
+sudo systemctl start symphony
+```
 
-   [Service]
-   Type=simple
-   User=symphony
-   WorkingDirectory=/opt/symphony/Symphony
-   ExecStart=/usr/bin/npm start
-   Restart=always
-   RestartSec=10
-   StandardOutput=journal
-   StandardError=journal
+**6. Verify Symphony is running:**
+```bash
+# Check status
+sudo systemctl status symphony
 
-   [Install]
-   WantedBy=multi-user.target
-   ```
+# View live logs (Ctrl+C to exit)
+sudo journalctl -u symphony -f
+```
 
-10. **Enable and start Symphony**
-    ```bash
-    sudo systemctl daemon-reload
-    sudo systemctl enable symphony
-    sudo systemctl start symphony
+#### Alternative: Manual Installation (No systemd)
 
-    # Check status
-    sudo systemctl status symphony
+If you want to run Symphony manually without systemd:
 
-    # View logs
-    sudo journalctl -u symphony -f
-    ```
+```bash
+# Install system dependencies
+sudo apt update && sudo apt upgrade -y
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs ffmpeg build-essential python3 git
+
+# Clone and setup
+git clone https://github.com/Marleybop/Symphony.git
+cd Symphony
+npm install --legacy-peer-deps
+
+# Configure
+cp .env.example .env
+nano .env  # Add your API keys
+
+# Run Symphony
+npm start
+```
 
 #### LXC Container Tips
 
@@ -169,23 +173,11 @@ sudo systemctl start symphony
 
 ### 🐳 Docker
 
-Symphony can run in Docker containers. You can use the following methods:
+**Quick Start with Docker Compose** (recommended):
 
-**Single Container**:
 ```bash
-docker run -it \
-  -v "$(pwd)/data":/data \
-  -e DISCORD_TOKEN='your_token' \
-  -e YOUTUBE_API_KEY='your_key' \
-  -e SPOTIFY_CLIENT_ID='your_id' \
-  -e SPOTIFY_CLIENT_SECRET='your_secret' \
-  ghcr.io/marleybop/symphony:latest
-```
-
-**Docker Compose** (recommended):
-
-Create `docker-compose.yml`:
-```yaml
+# Create docker-compose.yml
+cat > docker-compose.yml <<EOF
 services:
   symphony:
     image: ghcr.io/marleybop/symphony:latest
@@ -193,49 +185,79 @@ services:
     volumes:
       - ./symphony-data:/data
     environment:
-      - DISCORD_TOKEN=your_discord_token
-      - YOUTUBE_API_KEY=your_youtube_key
-      - SPOTIFY_CLIENT_ID=your_spotify_id     # Optional
-      - SPOTIFY_CLIENT_SECRET=your_spotify_secret  # Optional
+      - DISCORD_TOKEN=your_discord_token_here
+      - YOUTUBE_API_KEY=your_youtube_key_here
+      - SPOTIFY_CLIENT_ID=your_spotify_id        # Optional
+      - SPOTIFY_CLIENT_SECRET=your_spotify_secret # Optional
+EOF
+
+# Edit the file to add your API keys
+nano docker-compose.yml
+
+# Start Symphony
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
 ```
 
-Then run:
+**Single Container Command**:
 ```bash
-docker-compose up -d
+docker run -d \
+  --name symphony \
+  --restart unless-stopped \
+  -v "$(pwd)/symphony-data":/data \
+  -e DISCORD_TOKEN='your_discord_token' \
+  -e YOUTUBE_API_KEY='your_youtube_key' \
+  -e SPOTIFY_CLIENT_ID='your_spotify_id' \
+  -e SPOTIFY_CLIENT_SECRET='your_spotify_secret' \
+  ghcr.io/marleybop/symphony:latest
+
+# View logs
+docker logs -f symphony
 ```
 
 ### 💻 Node.js (Direct Installation)
 
-**Prerequisites**:
-- Node.js 22.x (22.0.0 or later recommended)
-- ffmpeg (4.1 or later)
-- Git
+#### Linux/macOS
 
-**Installation**:
+**Quick Install:**
+```bash
+# Install prerequisites (Ubuntu/Debian)
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs ffmpeg git
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Marleybop/Symphony.git
-   cd Symphony
-   ```
+# Clone, configure, and run
+git clone https://github.com/Marleybop/Symphony.git && cd Symphony
+cp .env.example .env
+nano .env  # Add your API keys
+npm install --legacy-peer-deps
+npm start
+```
 
-2. Configure environment:
-   ```bash
-   cp .env.example .env
-   nano .env  # Edit with your API keys
-   ```
+#### Windows
 
-3. Install dependencies:
-   ```bash
-   npm install --legacy-peer-deps
-   ```
+**Prerequisites:**
+1. Install [Node.js 22.x](https://nodejs.org/)
+2. Install [ffmpeg](https://ffmpeg.org/download.html) and add to PATH
+3. Install [Git](https://git-scm.com/download/win)
 
-4. Start Symphony:
-   ```bash
-   npm start
-   ```
+**Installation:**
+```powershell
+# Clone repository
+git clone https://github.com/Marleybop/Symphony.git
+cd Symphony
 
-**Note**: On Windows, you may need to manually set the ffmpeg path in your environment variables.
+# Configure
+copy .env.example .env
+notepad .env  # Add your API keys
+
+# Install and run
+npm install --legacy-peer-deps
+npm start
+```
+
+**Troubleshooting Windows:** If ffmpeg isn't found, add it to your system PATH or set `FFMPEG_PATH` environment variable.
 
 ## Commands
 
