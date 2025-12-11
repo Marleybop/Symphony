@@ -564,6 +564,7 @@ export default class {
 
       debug(shouldCacheVideo ? 'Caching video' : 'Not caching video');
 
+      // Add headers required by YouTube to avoid 403 errors
       ffmpegInputOptions.push(...[
         '-reconnect',
         '1',
@@ -571,6 +572,10 @@ export default class {
         '1',
         '-reconnect_delay_max',
         '5',
+        '-user_agent',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        '-headers',
+        'Accept-Language: en-US,en;q=0.9',
       ]);
     }
 
