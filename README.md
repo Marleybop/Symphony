@@ -49,8 +49,8 @@ Run these commands in order:
 # Update system
 sudo apt update && sudo apt upgrade -y
 
-# Install Node.js 22.x repository
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+# Install Node.js 20.x LTS repository
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 
 # Install all dependencies in one command
 sudo apt install -y nodejs npm ffmpeg build-essential python3 git
@@ -58,7 +58,7 @@ sudo apt install -y nodejs npm ffmpeg build-essential python3 git
 
 **2. Verify installations:**
 ```bash
-node --version   # Should show v22.x.x
+node --version   # Should show v20.x.x
 npm --version    # Should show npm version
 ffmpeg -version  # Should show ffmpeg version
 ```
@@ -141,7 +141,7 @@ If you want to run Symphony manually without systemd:
 ```bash
 # Install system dependencies
 sudo apt update && sudo apt upgrade -y
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs npm ffmpeg build-essential python3 git
 
 # Clone and setup
@@ -228,7 +228,7 @@ docker logs -f symphony
 **Quick Install:**
 ```bash
 # Install prerequisites (Ubuntu/Debian)
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs npm ffmpeg git
 
 # Clone, configure, and run
@@ -242,7 +242,7 @@ npm start
 #### Windows
 
 **Prerequisites:**
-1. Install [Node.js 22.x](https://nodejs.org/)
+1. Install [Node.js 20.x LTS](https://nodejs.org/)
 2. Install [ffmpeg](https://ffmpeg.org/download.html) and add to PATH
 3. Install [Git](https://git-scm.com/download/win)
 
