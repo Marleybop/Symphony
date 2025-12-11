@@ -512,7 +512,10 @@ export default class {
 
     if (!ffmpegInput) {
       // Not yet cached, must download
-      const streamInfo = await play.stream(song.url, {
+      // For YouTube, song.url is just the video ID, so we need to construct the full URL
+      const youtubeUrl = `https://www.youtube.com/watch?v=${song.url}`;
+
+      const streamInfo = await play.stream(youtubeUrl, {
         quality: 2, // High quality audio
       });
 
@@ -526,7 +529,7 @@ export default class {
 
       // Don't cache livestreams or long videos
       const MAX_CACHE_LENGTH_SECONDS = 30 * 60; // 30 minutes
-      const videoInfo = await play.video_basic_info(song.url);
+      const videoInfo = await play.video_basic_info(youtubeUrl);
       const isLive = videoInfo.video_details.live;
       const lengthSeconds = videoInfo.video_details.durationInSec;
 
