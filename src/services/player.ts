@@ -515,7 +515,10 @@ export default class {
       // For YouTube, song.url is just the video ID, so we need to construct the full URL
       const youtubeUrl = `https://www.youtube.com/watch?v=${song.url}`;
 
+      console.error('[DEBUG] Getting video info for:', youtubeUrl);
       const videoInfo = await play.video_info(youtubeUrl);
+
+      console.error('[DEBUG] Video info received, formats:', videoInfo?.format?.length);
 
       if (!videoInfo || !videoInfo.format || videoInfo.format.length === 0) {
         throw new Error('Can\'t get video info from play-dl.');
@@ -527,6 +530,8 @@ export default class {
       const formatWithAudio = videoInfo.format.find(f => f.audioQuality);
       const format = audioOnlyFormat ?? formatWithAudio ?? videoInfo.format[0];
 
+      console.error('[DEBUG] Selected format:', format?.itag, format?.mimeType, format?.audioQuality);
+
       if (!format) {
         throw new Error('Can\'t find suitable format.');
       }
@@ -534,10 +539,12 @@ export default class {
       debug('Selected format:', format.itag, format.mimeType, format.audioQuality);
 
       if (!format.url) {
+        console.error('[DEBUG] ERROR: Format has no URL!', format);
         debug('Format object:', format);
         throw new Error(`Format ${format.itag} has no URL property`);
       }
 
+      console.error('[DEBUG] Format URL length:', format.url.length);
       debug('Using play-dl format', format.mimeType, 'URL length:', format.url.length);
 
       ffmpegInput = format.url;
@@ -653,9 +660,11 @@ export default class {
 
   private async createReadStream(options: {url: string; cacheKey: string; ffmpegInputOptions?: string[]; cache?: boolean; volumeAdjustment?: string}): Promise<Readable> {
     return new Promise((resolve, reject) => {
+      console.error('[DEBUG] createReadStream called, URL exists:', !!options.url, 'Length:', options.url?.length);
       debug('createReadStream called with URL:', options.url ? `${options.url.substring(0, 100)}...` : 'UNDEFINED');
 
       if (!options.url) {
+        console.error('[DEBUG] ERROR: No URL provided to createReadStream!');
         reject(new Error('No input URL provided to createReadStream'));
         return;
       }
