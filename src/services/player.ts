@@ -515,22 +515,26 @@ export default class {
       // For YouTube, song.url is just the video ID, so we need to construct the full URL
       const youtubeUrl = `https://www.youtube.com/watch?v=${song.url}`;
 
-      const streamInfo = await play.stream(youtubeUrl, {
-        quality: 2, // High quality audio
-      });
+      const videoInfo = await play.video_info(youtubeUrl);
 
-      if (!streamInfo || !streamInfo.url) {
-        throw new Error('Can\'t get stream URL from play-dl.');
+      if (!videoInfo || !videoInfo.format || videoInfo.format.length === 0) {
+        throw new Error('Can\'t get video info from play-dl.');
       }
 
-      debug('Using play-dl stream', streamInfo.type);
+      // Get the best audio format
+      const format = videoInfo.format.find(f => f.mimeType?.includes('audio')) ?? videoInfo.format[0];
 
-      ffmpegInput = streamInfo.url;
+      if (!format || !format.url) {
+        throw new Error('Can\'t find suitable format.');
+      }
+
+      debug('Using play-dl format', format.mimeType);
+
+      ffmpegInput = format.url;
 
       // Don't cache livestreams or long videos
       const MAX_CACHE_LENGTH_SECONDS = 30 * 60; // 30 minutes
-      const videoInfo = await play.video_basic_info(youtubeUrl);
-      const isLive = videoInfo.video_details.live;
+      const isLive = videoInfo.LiveStreamData?.isLive ?? false;
       const lengthSeconds = videoInfo.video_details.durationInSec;
 
       shouldCacheVideo = !isLive && lengthSeconds < MAX_CACHE_LENGTH_SECONDS && !options.seek;
