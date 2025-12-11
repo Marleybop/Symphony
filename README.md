@@ -68,8 +68,11 @@ ffmpeg -version  # Should show ffmpeg version
 # Create symphony user and directory
 sudo adduser --system --group --home /opt/symphony symphony
 
-# Clone repository
+# Clone repository as symphony user
 sudo -u symphony git clone https://github.com/Marleybop/Symphony.git /opt/symphony/Symphony
+
+# Fix ownership (in case of any permission issues)
+sudo chown -R symphony:symphony /opt/symphony/Symphony
 
 # Install Node dependencies
 cd /opt/symphony/Symphony
