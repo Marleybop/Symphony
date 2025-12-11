@@ -522,11 +522,16 @@ export default class {
       }
 
       // Get the best audio format
-      const format = videoInfo.format.find(f => f.mimeType?.includes('audio')) ?? videoInfo.format[0];
+      // Prefer audio-only formats, otherwise use formats with audio
+      const audioOnlyFormat = videoInfo.format.find(f => f.mimeType?.startsWith('audio/'));
+      const formatWithAudio = videoInfo.format.find(f => f.audioQuality);
+      const format = audioOnlyFormat ?? formatWithAudio ?? videoInfo.format[0];
 
-      if (!format || !format.url) {
+      if (!format) {
         throw new Error('Can\'t find suitable format.');
       }
+
+      debug('Selected format:', format.itag, format.mimeType, format.audioQuality);
 
       debug('Using play-dl format', format.mimeType);
 
